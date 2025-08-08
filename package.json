@@ -1,8 +1,8 @@
 {
-  "name": "com.josh.eventbus",
+  "name": "com.josh.statemachines",
   "version": "1.0.0",
-  "displayName": "Event Bus",
-  "description": "An Event Bus system for Unity based on a project by Adam Mhyre",
+  "displayName": "State Machines",
+  "description": "A simple state machine implementation for Unity.",
   "unity": "2019.3",
   "author": {
     "name": "Josh",
