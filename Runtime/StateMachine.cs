@@ -134,14 +134,18 @@ namespace Josh.StateMachines
         /// <summary>
         /// Adds a global transition that can trigger from any state
         /// </summary>
-        /// <param name="toState">Target state</param>
-        /// <param name="predicate">Condition for the transition</param>
-        public void AddAnyTransition(IState toState, IPredicate predicate)
+        public void AddAnyTransition(IState toState, IPredicate predicate, bool allowSelfTransition = false)
         {
             if (toState == null) throw new ArgumentNullException(nameof(toState));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+            IPredicate newPredicate = predicate;
+            if (!allowSelfTransition)
+            {
+                newPredicate = new FuncPredicate(()=> predicate.Evaluate() && toState != _currentState);
+            }
             
-            _anyTransitions.Add(new Transition(toState, predicate));
+            _anyTransitions.Add(new Transition(toState, newPredicate));
         }
         
         /// <summary>
@@ -156,10 +160,10 @@ namespace Josh.StateMachines
         /// <summary>
         /// Adds a global transition using a function as the predicate condition
         /// </summary>
-        public void AddAnyTransition(IState toState, Func<bool> predicateFunc)
+        public void AddAnyTransition(IState toState, Func<bool> predicateFunc, bool allowSelfTransition = false)
         {
             if (predicateFunc == null) throw new ArgumentNullException(nameof(predicateFunc));
-            AddAnyTransition(toState, new FuncPredicate(predicateFunc));
+            AddAnyTransition(toState, new FuncPredicate(() => predicateFunc() && (allowSelfTransition || toState != _currentState)));
         }
 
         /// <summary>
@@ -168,6 +172,15 @@ namespace Josh.StateMachines
         public void RemoveTransitionsFrom(IState fromState)
         {
             _transitions.Remove(fromState);
+        }
+        
+        public void RemoveTransitionsTo(IState toState)
+        {
+            foreach (var transitions in _transitions.Values)
+            {
+                transitions.RemoveAll(t => t.TargetState == toState);
+            }
+            _anyTransitions.RemoveAll(t => t.TargetState == toState);
         }
 
         /// <summary>
