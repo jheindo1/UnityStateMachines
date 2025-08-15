@@ -142,7 +142,7 @@ namespace Josh.StateMachines
             IPredicate newPredicate = predicate;
             if (!allowSelfTransition)
             {
-                newPredicate = new FuncPredicate(()=> predicate.Evaluate() && toState != _currentState);
+                newPredicate = predicate.And(new FuncPredicate(()=> toState != _currentState));
             }
             
             _anyTransitions.Add(new Transition(toState, newPredicate));
@@ -163,7 +163,14 @@ namespace Josh.StateMachines
         public void AddAnyTransition(IState toState, Func<bool> predicateFunc, bool allowSelfTransition = false)
         {
             if (predicateFunc == null) throw new ArgumentNullException(nameof(predicateFunc));
-            AddAnyTransition(toState, new FuncPredicate(() => predicateFunc() && (allowSelfTransition || toState != _currentState)));
+            
+            IPredicate predicate = new FuncPredicate(predicateFunc);
+            if (!allowSelfTransition)
+            {
+                predicate = predicate.And(new FuncPredicate(() => toState != _currentState));
+            }
+            
+            AddAnyTransition(toState, predicate);
         }
 
         /// <summary>
